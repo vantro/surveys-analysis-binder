@@ -1,0 +1,1 @@
+ voila GenericMoodleChart2.ipynb --VoilaConfiguration.file_whitelist="['.*\.pdf']"
