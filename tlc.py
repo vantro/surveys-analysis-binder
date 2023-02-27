@@ -172,8 +172,9 @@ def generate_charts(change) -> str:
     global occurences
 
     input_file_name = list(change['new'])[0]
-    print(change['new'].values())
-    content = dict(change['new'].values())[0].get('content')
+
+    infos = dict(change['new'])
+    content = dict(list(infos.values())[0]).get('content')
     content = io.StringIO(content.decode('utf-8'))
 
     try:
