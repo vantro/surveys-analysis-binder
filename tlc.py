@@ -171,10 +171,14 @@ def generate_charts(change) -> str:
     global df
     global occurences
 
-    input_file_name = list(change['new'])[0]
+    # input_file_name = list(change['new'])[0]
+    input_file_name = change['new'][0]['name']
 
-    infos = dict(change['new'])
+    """infos = dict(change['new'])
     content = dict(list(infos.values())[0]).get('content')
+    content = io.StringIO(content.decode('utf-8'))"""
+    # infos = dict(change['new'][0])
+    content = change['new'][0]['content'].tobytes()
     content = io.StringIO(content.decode('utf-8'))
 
     try:
