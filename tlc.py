@@ -181,7 +181,7 @@ def generate_charts(change) -> str:
         input_file_name = infos['name']
     
     _temp = os.path.splitext(input_file_name)
-    pdf_file_name = f"{_temp[0]}.pdf"
+    pdf_file_name = f"public.{_temp[0]}.pdf"
    
     content = infos['content']
     if type(content) is memoryview:
