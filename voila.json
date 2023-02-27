@@ -1,0 +1,5 @@
+{
+    "VoilaConfiguration": {
+        "file_whitelist": [".*\.(png|jpg|gif|svg|pdf)", "public.*"]
+    }
+}

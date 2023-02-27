@@ -153,7 +153,7 @@ def MultiPie(mydf: pd, mytitle) -> plt:
 
 def QPie(question, maxpage, pdf):
     mydf = df[occurences[question]['column']].value_counts().sort_index(ascending=True).to_frame()
-    myfig = MultiPie(mydf, occurences[question].get('title'))
+    myfig = MultiPie(mydf,f"{question}: {occurences[question].get('title')}")
     pdf.savefig(myfig, bbox_inches="tight")
 
 
@@ -278,7 +278,7 @@ def generate_charts(change) -> str:
 
         elif occurences[q]['type'] == 'radar':
             categories = labels_radar(occurences[q]['column'])
-            val1 = (occurences[q]['title'],
+            val1 = (f"{q}: {occurences[q]['title']}",
                     [df[occurences[q]['column']].mean().tolist()])
             mydata = [categories, val1]
             N = len(mydata[0])
