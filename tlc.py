@@ -13,7 +13,7 @@ from matplotlib.transforms import Affine2D
 from matplotlib.backends.backend_pdf import PdfPages
 import csv
 import io
-import sys
+import os
 
 
 def radar_factory(num_vars, frame='circle'):
@@ -180,6 +180,9 @@ def generate_charts(change) -> str:
         infos = change['new'][0]
         input_file_name = infos['name']
     
+    _temp = os.path.splitext(input_file_name)
+    pdf_file_name = f"{_temp[0]}.pdf"
+   
     content = infos['content']
     if type(content) is memoryview:
         content = bytes(content)
@@ -269,7 +272,7 @@ def generate_charts(change) -> str:
     #
     # Crée un fichier pdf
     #
-    pdf = PdfPages(f"{input_file_name}.pdf")
+    pdf = PdfPages(pdf_file_name)
 
     for q in occurences:
         if occurences[q]['type'] == 'pie':
@@ -327,4 +330,4 @@ def generate_charts(change) -> str:
             pdf.savefig(fig, bbox_inches="tight")
 
     pdf.close()
-    return f"{input_file_name}.pdf"
+    return pdf_file_name
