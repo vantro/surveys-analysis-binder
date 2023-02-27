@@ -13,6 +13,7 @@ from matplotlib.transforms import Affine2D
 from matplotlib.backends.backend_pdf import PdfPages
 import csv
 import io
+import sys
 
 
 def radar_factory(num_vars, frame='circle'):
@@ -171,14 +172,17 @@ def generate_charts(change) -> str:
     global df
     global occurences
 
-    # input_file_name = list(change['new'])[0]
-    input_file_name = change['new'][0]['name']
-
-    """infos = dict(change['new'])
-    content = dict(list(infos.values())[0]).get('content')
-    content = io.StringIO(content.decode('utf-8'))"""
-    # infos = dict(change['new'][0])
-    content = change['new'][0]['content'].tobytes()
+    if type(change['new']) is dict:
+        infos = change['new']
+        infos = list(infos.values())[0]
+        input_file_name = infos['metadata']['name']
+    elif type(change['new']) is tuple:
+        infos = change['new'][0]
+        input_file_name = infos['name']
+    
+    content = infos['content']
+    if type(content) is memoryview:
+        content = bytes(content)
     content = io.StringIO(content.decode('utf-8'))
 
     try:
