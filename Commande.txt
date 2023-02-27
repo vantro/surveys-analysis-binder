@@ -1,1 +1,3 @@
  voila GenericMoodleChart2.ipynb --VoilaConfiguration.file_whitelist="['.*\.pdf']"
+
+ https://mybinder.org/v2/gh/vantro/surveys-analysis-binder/HEAD?labpath=oila%2FGenericMoodleChart2.ipynb%20--VoilaConfiguration.file_whitelist%3D%22%5B'.*%5C.pdf'%5D%22
