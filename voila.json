@@ -1,5 +1,5 @@
 {
     "VoilaConfiguration": {
-        "file_whitelist": ["public.*"]
+        "file_whitelist": [".*"]
     }
 }
