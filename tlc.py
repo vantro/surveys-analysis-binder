@@ -317,7 +317,7 @@ def generate_charts(change) -> str:
     #
     # Crée un fichier pdf
     #
-    pdf = PdfPages(f'../Files/{pdf_file_name}')
+    pdf = PdfPages(pdf_file_name)
 
     for q in occurences:
         if occurences[q]['type'] == 'pie':
