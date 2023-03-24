@@ -1,5 +1,7 @@
 {
     "VoilaConfiguration": {
-        "file_whitelist": [".*"]
+        "file_whitelist": [".*"],
+        "show_tracebacks": true,
+        "extra-template-path": "mytemplate"
     }
 }
