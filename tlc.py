@@ -161,9 +161,51 @@ def labels_radar(columns: list) -> list:
     labels = []
     for str in columns:
         deb = str.find('>')
-        labels.append(str[deb+1:])
+        label = multiligne(str[deb+1:], 30)
+        labels.append(label)
     return labels
 
+def multiligne(texte: str, size: int) -> str:
+    mots = texte.split()
+    resultat = ""
+    ligne = ""
+    for mot in mots:
+        if len(ligne + mot) <= size:
+            ligne += mot + " "
+        else:
+            resultat += ligne.strip() + "\n"
+            ligne = mot + " "
+    resultat += ligne.strip()
+    return resultat
+
+
+def Plot_bar(question, maxpage, pdf):
+    df[occurences[question]['column']].replace(-999.0, np.NaN, inplace=True)
+    categories = labels_radar(occurences[question]['column'])    
+    values = df[occurences[question]['column']].mean().tolist()
+
+    fig = plt.figure(figsize = (10, 5))
+    
+    colors = ['#D0F741',
+              '#49DC3A',
+              '#3B7EBA',
+              '#5A45C3',
+              '#FFB143',
+              '#FFDA43',
+              '#C634AF',
+              '#FC424B']
+    
+    # creating the bar plot
+    plt.bar(categories,
+            values,
+            color=colors[1],
+            width = 0.4)
+    
+    plt.ylim((0,5))
+    plt.ylabel("Rating")
+    plt.title(f"{question}: {occurences[question].get('title')}")
+    plt.show()
+    pdf.savefig(fig, bbox_inches="tight")
 
 def generate_charts(change) -> str:
     """
@@ -211,7 +253,7 @@ def generate_charts(change) -> str:
                      encoding='utf-8-sig',
                      delimiter=dialect.delimiter,
                      on_bad_lines='skip')
-    # df.head()
+    # print(df.head())
 
     if len(df.columns) <= 2:
         raise UserWarning(f'\nProblem reading the CSV file. Inconsistent number of columns ({df.columns}).\nProblème de lecture du fichier CSV. Nombre de colonnes incohérent ({df.columns})')
@@ -265,21 +307,30 @@ def generate_charts(change) -> str:
                 occurences[element]['type'] = 'pie'
             else:
                 occurences[element]['type'] = 'comments'
+        elif occurences[f"{element}"]['nb'] == 2:
+            occurences[element]['type'] = 'bar'
         else:
             occurences[element]['type'] = 'radar'
+
     # print(occurences)
 
     #
     # Crée un fichier pdf
     #
-    pdf = PdfPages(pdf_file_name)
+    pdf = PdfPages(f'../Files/{pdf_file_name}')
 
     for q in occurences:
         if occurences[q]['type'] == 'pie':
             # on dessine un pie
             QPie(q, 9, pdf)
 
+        elif occurences[q]['type'] == 'bar':
+            Plot_bar(q, 9, pdf)
+
         elif occurences[q]['type'] == 'radar':
+            # remplace les -999 par non
+            df[occurences[q]['column']].replace(-999.0, np.NaN, inplace=True)
+            
             categories = labels_radar(occurences[q]['column'])
             val1 = (f"{q}: {occurences[q]['title']}",
                     [df[occurences[q]['column']].mean().tolist()])
