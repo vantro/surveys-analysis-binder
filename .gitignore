@@ -2,7 +2,6 @@
 .ipynb_checkpoints/*
 __pycache__/*
 MoodleSynapseS/.ipynb_checkpoints/*
-share/.DS_Store
-share/jupyter/voila/.DS_Store
 OUTPUT
 OUTPUT/*
+/mytemplate/.DS_Store
