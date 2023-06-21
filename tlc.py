@@ -128,7 +128,8 @@ def MultiPie(mydf: pd, mytitle) -> plt:
         ax.pie(values, labels=[k[0] for k, v in mydf.iterrows()],
                autopct=lambda p: f"{p:.2f}%  ({(p * sum(values)/100):,.0f})" if p > 0 else '',
                wedgeprops={'linewidth': 1, 'edgecolor': 'white'},
-               textprops={'color': "#8E8E90", 'weight': 'bold', 'fontsize': '14'},
+               textprops={'color': "#8E8E90", 'weight': 'bold',
+                          'fontsize': '14'},
                colors=colors)
 
         ax.set_title(mytitle, weight='bold',
@@ -153,7 +154,7 @@ def MultiPie(mydf: pd, mytitle) -> plt:
 
 def QPie(question, maxpage, pdf):
     mydf = df[occurences[question]['column']].value_counts().sort_index(ascending=True).to_frame()
-    myfig = MultiPie(mydf,f"{question}: {occurences[question].get('title')}")
+    myfig = MultiPie(mydf, f"{question}: {occurences[question].get('title')}")
     pdf.savefig(myfig, bbox_inches="tight")
 
 
@@ -164,6 +165,7 @@ def labels_radar(columns: list) -> list:
         label = multiligne(str[deb+1:], 30)
         labels.append(label)
     return labels
+
 
 def multiligne(texte: str, size: int) -> str:
     mots = texte.split()
@@ -181,11 +183,11 @@ def multiligne(texte: str, size: int) -> str:
 
 def Plot_bar(question, maxpage, pdf):
     df[occurences[question]['column']].replace(-999.0, np.NaN, inplace=True)
-    categories = labels_radar(occurences[question]['column'])    
+    categories = labels_radar(occurences[question]['column'])
     values = df[occurences[question]['column']].mean().tolist()
 
-    fig = plt.figure(figsize = (10, 5))
-    
+    fig = plt.figure(figsize=(10, 5))
+
     colors = ['#D0F741',
               '#49DC3A',
               '#3B7EBA',
@@ -194,18 +196,19 @@ def Plot_bar(question, maxpage, pdf):
               '#FFDA43',
               '#C634AF',
               '#FC424B']
-    
+
     # creating the bar plot
     plt.bar(categories,
             values,
             color=colors[1],
-            width = 0.4)
-    
-    plt.ylim((0,5))
+            width=0.4)
+
+    plt.ylim((0, 5))
     plt.ylabel("Rating")
     plt.title(f"{question}: {occurences[question].get('title')}")
     plt.show()
     pdf.savefig(fig, bbox_inches="tight")
+
 
 def generate_charts(change) -> str:
     """
@@ -221,10 +224,10 @@ def generate_charts(change) -> str:
     elif type(change['new']) is tuple:
         infos = change['new'][0]
         input_file_name = infos['name']
-    
+
     _temp = os.path.splitext(input_file_name)
     pdf_file_name = f"public.{_temp[0]}.pdf"
-   
+
     content = infos['content']
     if type(content) is memoryview:
         content = bytes(content)
@@ -328,9 +331,10 @@ def generate_charts(change) -> str:
             Plot_bar(q, 9, pdf)
 
         elif occurences[q]['type'] == 'radar':
-            # remplace les -999 par non
-            df[occurences[q]['column']].replace(-999.0, np.NaN, inplace=True)
-            
+            # remplace les -999 par NaN
+            # print(occurences[q])
+            df[occurences[q]['column']] = df[occurences[q]['column']].replace(-999.0, np.NaN)
+
             categories = labels_radar(occurences[q]['column'])
             val1 = (f"{q}: {occurences[q]['title']}",
                     [df[occurences[q]['column']].mean().tolist()])
@@ -378,6 +382,7 @@ def generate_charts(change) -> str:
 
             fig.tight_layout(pad=2.0)
             plt.show()
+            fig.savefig(f"{title}.svg")
             pdf.savefig(fig, bbox_inches="tight")
 
     pdf.close()
