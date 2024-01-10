@@ -233,6 +233,7 @@ def generate_charts(change) -> str:
         content = bytes(content)
     content = io.StringIO(content.decode('utf-8'))
 
+    # détermine la langue
     try:
         headers = pd.read_csv(content,
                               index_col=0,
@@ -245,12 +246,14 @@ def generate_charts(change) -> str:
     except:
         raise UserWarning("\nProblem reading the file. Check the name of the .CSV file\nEnter the correct file name in the previous step.\nProblème de lecture du fichier. Vérifier le nom du fichier .CSV\nSaisir le bon nom de fichier à l'étape précédente.")
 
+    # cherche le séparateur
     content.seek(0)
     try:
         dialect = csv.Sniffer().sniff(content.read(1024), [',', ';'])
     except:
         raise UserWarning("Problème de lecture du fichier. Vérifier le nom du fichier .CSV\nSaisir le bon nom de fichier à l'étape précédente.")
 
+    # charge le fichier
     content.seek(0)
     df = pd.read_csv(content,
                      encoding='utf-8-sig',
@@ -285,6 +288,7 @@ def generate_charts(change) -> str:
             else:
                 occurences[col[:3]]['column'] = [col]
 
+    # on détermine le type de graphique
     for element in occurences.keys():
         if occurences[f"{element}"]['nb'] == 1:
             name = occurences[f"{element}"]['column'][0]
@@ -322,6 +326,7 @@ def generate_charts(change) -> str:
     #
     pdf = PdfPages(pdf_file_name)
 
+    # on crée le graphique pour chaque question
     for q in occurences:
         if occurences[q]['type'] == 'pie':
             # on dessine un pie
