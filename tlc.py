@@ -279,16 +279,13 @@ def generate_charts(change) -> str:
 
     # on garde que les questions
     for col in df.columns:
-        # if re.search(r"^Q\d{2}", col):
         if re.match(r"^(Q\d*)_", col):
             num_q = re.match(r"^(Q\d*)_", col).group(1)
             indice_fin = col.find("-")
             if indice_fin == -1:
                 indice_fin = len(col)
-            # occurences[col[:3]]['title'] = col[4:indice_fin]
             occurences[num_q]['title'] = col[len(num_q)+1:indice_fin]
             if 'column' in occurences[num_q]:
-                # occurences[col[:3]]['column'].append(col)
                 occurences[num_q]['column'].append(col)
             else:
                 occurences[num_q]['column'] = [col]
