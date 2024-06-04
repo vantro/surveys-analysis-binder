@@ -265,7 +265,8 @@ def generate_charts(change) -> str:
         raise UserWarning(f'\nProblem reading the CSV file. Inconsistent number of columns ({df.columns}).\nProblème de lecture du fichier CSV. Nombre de colonnes incohérent ({df.columns})')
 
     # on extrait les questions que l'on met dans un dictionnaire
-    questions = [col[:3] for col in df.columns if re.search(r"^Q\d{2}", col)]
+    # questions = [col[:3] for col in df.columns if re.search(r"^Q\d{2}", col)]
+    questions = [re.match(r"^(Q\d*)_", elem).group(1) for elem in df.columns if re.match(r"^(Q\d*)_", elem)]
 
     # on cherche le nombre de colonne associé à une question
     occurences = {}
@@ -278,15 +279,19 @@ def generate_charts(change) -> str:
 
     # on garde que les questions
     for col in df.columns:
-        if re.search(r"^Q\d{2}", col):
+        # if re.search(r"^Q\d{2}", col):
+        if re.match(r"^(Q\d*)_", col):
+            num_q = re.match(r"^(Q\d*)_", col).group(1)
             indice_fin = col.find("-")
             if indice_fin == -1:
                 indice_fin = len(col)
-            occurences[col[:3]]['title'] = col[4:indice_fin]
-            if 'column' in occurences[col[:3]]:
-                occurences[col[:3]]['column'].append(col)
+            # occurences[col[:3]]['title'] = col[4:indice_fin]
+            occurences[num_q]['title'] = col[len(num_q)+1:indice_fin]
+            if 'column' in occurences[num_q]:
+                # occurences[col[:3]]['column'].append(col)
+                occurences[num_q]['column'].append(col)
             else:
-                occurences[col[:3]]['column'] = [col]
+                occurences[num_q]['column'] = [col]
 
     # on détermine le type de graphique
     for element in occurences.keys():
@@ -342,7 +347,7 @@ def generate_charts(change) -> str:
 
             categories = labels_radar(occurences[q]['column'])
             val1 = (f"{q}: {occurences[q]['title']}",
-                    [df[occurences[q]['column']].mean().tolist()])
+                    [df[occurences[q]['column']].mean(numeric_only=True).tolist()])
             mydata = [categories, val1]
             N = len(mydata[0])
 
