@@ -18,8 +18,6 @@ from reportlab.lib.pagesizes import A4
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, PageBreak, KeepTogether
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib.units import inch
-from reportlab.graphics import renderPDF
-from reportlab.graphics.shapes import Drawing
 from svglib.svglib import svg2rlg
 
 
@@ -247,12 +245,12 @@ def create_pdf(pages=[], file_name='output.pdf'):
     width, height = A4
     elements = []
 
-    for page_title, svg_files in pages:
-        if svg_files is not None:
+    for _type, page_title, data in pages:
+        if (_type == 'img') & (data is not None):
             elements.append(Paragraph(page_title, styles["Heading1"]))
             elements.append(Spacer(1, 12))
-            if len(svg_files) > 1:
-                available_height = (height - (2 * inch)) / len(svg_files)
+            if len(data) > 1:
+                available_height = (height - (2 * inch)) / len(data)
             else:
                 available_height = height - (2 * inch)
 
@@ -260,18 +258,22 @@ def create_pdf(pages=[], file_name='output.pdf'):
             # print(page_title)
             # print(f"width:{width} height:{height} - avail. W:{available_width} avail. H:{available_height}")
             
-            for idx, svg_file in enumerate(svg_files):
+            for idx, svg_file in enumerate(data):
                 drawing = svg2rlg(svg_file)                    
                 scale_factor = min(available_width / drawing.width, available_height / drawing.height)
                 # print(f"drawing.height:{drawing.height} Scale:{scale_factor} - new w:{drawing.width * scale_factor} new H:{drawing.height * scale_factor}")
                 drawing.width *= scale_factor
                 drawing.height *= scale_factor
                 drawing.scale(scale_factor, scale_factor)
-
                 elements.append(KeepTogether(drawing))
                 if idx < len(svg_file):
                     elements.append(Spacer(1, 12))
-
+            # Add a page break
+            elements.append(PageBreak())
+        elif _type == 'txt':
+            elements.append(Paragraph(page_title, styles["Heading1"]))
+            elements.append(Spacer(1, 12))
+            elements.append(Paragraph(data, styles["Normal"]))
             # Add a page break
             elements.append(PageBreak())
 
@@ -457,16 +459,16 @@ def generate_charts(change) -> str:
             # calcul du nb de ligne
             nb_q = len(occurences[q]['column'])
             
-            if nb_q % 3 == 0:
-                nb_lignes = nb_q // 3
+            if nb_q % 4 == 0:
+                nb_lignes = nb_q // 4
             else:
-                nb_lignes = (nb_q // 3) + 1        
+                nb_lignes = (nb_q // 4) + 1        
             
-            nb_cols = 3 if nb_q > 3 else nb_q  # Limiter le nombre de colonnes à 3 max
+            nb_cols = 4 if nb_q > 4 else nb_q  # Limiter le nombre de colonnes à 3 max
 
             # Ajuster dynamiquement la taille de la figure en fonction du nombre de lignes
             fig_width = 20
-            fig_height = 8 * nb_lignes
+            fig_height = 4 * nb_lignes
 
             # Créer une grille de subplots avec n lignes et 3 colonnes max
             fig2, axes = plt.subplots(nrows=nb_lignes, ncols=nb_cols, figsize=(fig_width, fig_height))
@@ -528,7 +530,15 @@ def generate_charts(change) -> str:
 
     pages =[]
     for q in occurences:
-        pages.append((occurences[q]['title'], occurences[q].get('imgs')))
+        if occurences[q].get('type') != 'comments':
+            pages.append(('img', occurences[q]['title'], occurences[q].get('imgs')))
+        elif occurences[q].get('type') == 'comments':
+            valeurs_non_nulles_dropna = df[occurences[q]['column']].dropna()
+            paragraph = ''
+            for _string in valeurs_non_nulles_dropna.values:
+                paragraph += f"{_string[0]}\n\n"
+                
+            pages.append(('txt', occurences[q]['title'], paragraph))
 
     create_pdf(pages=pages, file_name=pdf_file_name)
 
