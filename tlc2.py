@@ -157,13 +157,127 @@ def MultiPie(mydf: pd, mytitle) -> plt:
     return fig
 
 
-def QPie(question, maxpage, pdf):
+def QPie(question, maxpage):
     mydf = df[occurences[question]['column']].value_counts().sort_index(ascending=True).to_frame()
     myfig = MultiPie(mydf, f"{question}: {occurences[question].get('title')}")
     myfig.savefig(f"{remplacer_caracteres(occurences[question].get('title'))}.svg")
-    pdf.savefig(myfig, bbox_inches="tight")
     plt.close(myfig)
     occurences[question]['imgs'] = [f"{remplacer_caracteres(occurences[question].get('title'))}.svg"]
+
+
+def QRadar(question) -> None:
+    q = question
+    # remplace les -999 par NaN
+    # print(occurences[q])
+    df[occurences[q]['column']] = df[occurences[q]['column']].replace(-999.0, np.NaN)
+
+    categories = labels_radar(occurences[q]['column'])
+    values = df[occurences[q]['column']].mean().tolist()
+    title = occurences[q]['title']
+        
+    N = len(categories)
+
+    theta = radar_factory(N, frame='polygon')
+    fig1, axs = plt.subplots(figsize=(10, 10),
+                            subplot_kw=dict(projection='radar'))
+    fig1.subplots_adjust(wspace=0.25,
+                        hspace=0.25,
+                        top=0.85,
+                        bottom=0.1)
+    
+    # Définir l'échelle maximale en fonction de la valeur maximale des moyennes
+    max_val = np.ceil(max(values))
+
+    axs.set_rgrids(np.arange(1, max_val+1, 1))
+    axs.set_ylim(0, max_val)
+    
+    axs.plot(theta, values, color='#D0F741')
+    axs.fill(theta, values, facecolor='#D0F741', alpha=0.25)
+    axs.set_varlabels(categories)
+    
+    axs.set_title(title,
+                weight='bold',
+                size='medium',
+                position=(0.5, 1.1),
+                horizontalalignment='center',
+                verticalalignment='center')
+    
+    plt.yticks(np.arange(1, max_val+1, 1), color="grey", size=10)
+
+    fig1.tight_layout()
+    # plt.show()
+    fig1.savefig(f"{remplacer_caracteres(title)}.svg", format='svg')
+    plt.close(fig1)
+
+
+def QHistoRadar(question) -> None: 
+    q=question
+    title = occurences[q]['title']
+    # calcul du nb de ligne
+    nb_q = len(occurences[q]['column'])
+    
+    if nb_q % 4 == 0:
+        nb_lignes = nb_q // 4
+    else:
+        nb_lignes = (nb_q // 4) + 1        
+    
+    nb_cols = 4 if nb_q > 4 else nb_q  # Limiter le nombre de colonnes à 3 max
+
+    # Ajuster dynamiquement la taille de la figure en fonction du nombre de lignes
+    fig_width = 20
+    fig_height = 4 * nb_lignes
+
+    # Créer une grille de subplots avec n lignes et 3 colonnes max
+    fig2, axes = plt.subplots(nrows=nb_lignes, ncols=nb_cols, figsize=(fig_width, fig_height))
+
+    for idx, col in enumerate(df[occurences[q]['column']].columns):
+
+        val_counts = df[col].value_counts(sort=False).sort_index()
+
+        # Calculer les indices des subplots
+        row = idx // nb_cols
+        col_idx = idx % nb_cols
+        # print(f'nb_lignes:{nb_lignes}, nb_cols:{nb_cols}, row:{row}, col_idx:{col_idx}')
+
+        # Gérer le cas où axes est un tableau 1D ou 2D
+        if nb_lignes == 1:
+            ax = axes[col_idx]
+        elif nb_cols == 1:
+            ax = axes[row]
+        else:
+            ax = axes[row, col_idx]
+
+        # Créer l'histogramme à partir des données val_counts
+        ax.bar(val_counts.index, val_counts.values, width=0.8, color='blue')
+
+        # Ajouter des étiquettes et un titre
+        ax.set_xlabel(f'Answers (average:{df[col].mean():,.3f})')
+        ax.set_ylabel('Occurrences')
+        ax.set_title(f'...{col[-30:]}')
+
+        # Définir les ticks sur l'axe des x en tant qu'entiers croissants à partir de 1
+        max_val = int(val_counts.index.max())
+        ax.set_xticks(range(1, max_val + 1))
+
+        # Définir les valeurs de l'axe des y en tant qu'entiers
+        current_ylim = ax.get_ylim()
+        ax.set_ylim(bottom=0, top=current_ylim[1])
+        ax.set_yticks(range(int(ax.get_ylim()[0]), int(ax.get_ylim()[1])+1, 1))
+
+    
+    # Supprimer les subplots vides si nécessaire
+    if nb_q % nb_cols != 0:
+        for idx in range(nb_q, nb_lignes * nb_cols):
+            fig2.delaxes(axes.flat[idx])
+
+
+    # Ajuster la mise en page pour éviter les chevauchements
+    plt.tight_layout()
+
+    # Afficher le graphique
+    # plt.show()
+    fig2.savefig(f"{remplacer_caracteres(title)}_hist.svg")
+    plt.close(fig2)
 
 
 def labels_radar(columns: list) -> list:
@@ -197,7 +311,7 @@ def remplacer_caracteres(chaine) -> str:
     return nouvelle_chaine
 
 
-def Plot_bar(question, maxpage, pdf):
+def Plot_bar(question, maxpage):
     df[occurences[question]['column']].replace(-999.0, np.NaN, inplace=True)
     categories = labels_radar(occurences[question]['column'])
     values = df[occurences[question]['column']].mean().tolist()
@@ -223,7 +337,6 @@ def Plot_bar(question, maxpage, pdf):
     plt.ylabel("Rating")
     plt.title(f"{question}: {occurences[question].get('title')}")
     plt.show()
-    pdf.savefig(fig, bbox_inches="tight")
 
 
 def create_pdf(pages=[], file_name='output.pdf'):
@@ -394,145 +507,30 @@ def generate_charts(change) -> str:
             occurences[element]['type'] = 'radar'
 
     # print(occurences)
-
-    #
-    # Crée un fichier pdf
-    #
-    pdf = PdfPages(pdf_file_name)
-
+    # Préparation des pages du PDF
+    pages =[]
     # on crée le graphique pour chaque question
     for q in occurences:
         if occurences[q]['type'] == 'pie':
             # on dessine un pie
-            QPie(q, 9, pdf)
+            QPie(q, 9)
 
         elif occurences[q]['type'] == 'bar':
-            Plot_bar(q, 9, pdf)
+            Plot_bar(q, 9)
 
         elif occurences[q]['type'] == 'radar':
-            # remplace les -999 par NaN
-            # print(occurences[q])
-            df[occurences[q]['column']] = df[occurences[q]['column']].replace(-999.0, np.NaN)
-
-            categories = labels_radar(occurences[q]['column'])
-            values = df[occurences[q]['column']].mean().tolist()
-            title = occurences[q]['title']
-                
-            N = len(categories)
-
-            theta = radar_factory(N, frame='polygon')
-            fig1, axs = plt.subplots(figsize=(10, 10),
-                                    subplot_kw=dict(projection='radar'))
-            fig1.subplots_adjust(wspace=0.25,
-                                hspace=0.25,
-                                top=0.85,
-                                bottom=0.1)
-            
-            # Définir l'échelle maximale en fonction de la valeur maximale des moyennes
-            max_val = np.ceil(max(values))
-
-            axs.set_rgrids(np.arange(1, max_val+1, 1))
-            axs.set_ylim(0, max_val)
-            
-            axs.plot(theta, values, color='#D0F741')
-            axs.fill(theta, values, facecolor='#D0F741', alpha=0.25)
-            axs.set_varlabels(categories)
-            
-            axs.set_title(title,
-                        weight='bold',
-                        size='medium',
-                        position=(0.5, 1.1),
-                        horizontalalignment='center',
-                        verticalalignment='center')
-            
-            plt.yticks(np.arange(1, max_val+1, 1), color="grey", size=10)
-
-            fig1.tight_layout()
-            # plt.show()
-            fig1.savefig(f"{remplacer_caracteres(title)}.svg", format='svg')
-            pdf.savefig(fig1, bbox_inches="tight")
-            plt.close(fig1)
-            
+            #Crée le radar
+            QRadar(question=q)
 
             # Ajout de l'histogramme des réponses
-            #-------
-            # calcul du nb de ligne
-            nb_q = len(occurences[q]['column'])
-            
-            if nb_q % 4 == 0:
-                nb_lignes = nb_q // 4
-            else:
-                nb_lignes = (nb_q // 4) + 1        
-            
-            nb_cols = 4 if nb_q > 4 else nb_q  # Limiter le nombre de colonnes à 3 max
-
-            # Ajuster dynamiquement la taille de la figure en fonction du nombre de lignes
-            fig_width = 20
-            fig_height = 4 * nb_lignes
-
-            # Créer une grille de subplots avec n lignes et 3 colonnes max
-            fig2, axes = plt.subplots(nrows=nb_lignes, ncols=nb_cols, figsize=(fig_width, fig_height))
-
-            for idx, col in enumerate(df[occurences[q]['column']].columns):
-
-                val_counts = df[col].value_counts(sort=False).sort_index()
-
-                # Calculer les indices des subplots
-                row = idx // nb_cols
-                col_idx = idx % nb_cols
-                # print(f'nb_lignes:{nb_lignes}, nb_cols:{nb_cols}, row:{row}, col_idx:{col_idx}')
-
-                # Gérer le cas où axes est un tableau 1D ou 2D
-                if nb_lignes == 1:
-                    ax = axes[col_idx]
-                elif nb_cols == 1:
-                    ax = axes[row]
-                else:
-                    ax = axes[row, col_idx]
-
-                # Créer l'histogramme à partir des données val_counts
-                ax.bar(val_counts.index, val_counts.values, width=0.8, color='blue')
-
-                # Ajouter des étiquettes et un titre
-                ax.set_xlabel(f'Answers (average:{df[col].mean():,.3f})')
-                ax.set_ylabel('Occurrences')
-                ax.set_title(f'...{col[-30:]}')
-
-                # Définir les ticks sur l'axe des x en tant qu'entiers croissants à partir de 1
-                max_val = int(val_counts.index.max())
-                ax.set_xticks(range(1, max_val + 1))
-
-                # Définir les valeurs de l'axe des y en tant qu'entiers
-                current_ylim = ax.get_ylim()
-                ax.set_ylim(bottom=0, top=current_ylim[1])
-                ax.set_yticks(range(int(ax.get_ylim()[0]), int(ax.get_ylim()[1])+1, 1))
-
-            
-            # Supprimer les subplots vides si nécessaire
-            if nb_q % nb_cols != 0:
-                for idx in range(nb_q, nb_lignes * nb_cols):
-                    fig2.delaxes(axes.flat[idx])
-
-
-            # Ajuster la mise en page pour éviter les chevauchements
-            plt.tight_layout()
-
-            # Afficher le graphique
-            # plt.show()
-            fig2.savefig(f"{remplacer_caracteres(title)}_hist.svg")
-            pdf.savefig(fig2, bbox_inches="tight")
-            plt.close(fig2)
+            QHistoRadar(question=q)
 
             # Enregistre les infos pour pdf
-            occurences[q]['imgs'] = [f"{remplacer_caracteres(title)}.svg", 
-                                    f"{remplacer_caracteres(title)}_hist.svg"]
-    pdf.close()
-
-    pages =[]
-    for q in occurences:
-        if occurences[q].get('type') != 'comments':
-            pages.append(('img', occurences[q]['title'], occurences[q].get('imgs')))
+            occurences[q]['imgs'] = [f"{remplacer_caracteres(occurences[q]['title'])}.svg", 
+                                    f"{remplacer_caracteres(occurences[q]['title'])}_hist.svg"]
+        
         elif occurences[q].get('type') == 'comments':
+            # on ajoute les commentaires pour le PDF
             valeurs_non_nulles_dropna = df[occurences[q]['column']].dropna()
             paragraph = ''
             for _string in valeurs_non_nulles_dropna.values:
@@ -540,6 +538,11 @@ def generate_charts(change) -> str:
                 
             pages.append(('txt', occurences[q]['title'], paragraph))
 
+        # on ajoute au PDF les images pour pie/bar/radar
+        if occurences[q].get('type') != 'comments':
+            pages.append(('img', occurences[q]['title'], occurences[q].get('imgs')))    
+
+    # Création du PDF
     create_pdf(pages=pages, file_name=pdf_file_name)
 
     return pdf_file_name

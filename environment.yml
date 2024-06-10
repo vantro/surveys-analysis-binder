@@ -10,4 +10,5 @@ dependencies:
 - voila
 - reportlab
 - svglib
+- jupytext
 - jupyterlab-myst

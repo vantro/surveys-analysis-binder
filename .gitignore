@@ -5,7 +5,7 @@ MoodleSynapseS/.ipynb_checkpoints/*
 OUTPUT
 OUTPUT/*
 /mytemplate/.DS_Store
-
+*.pdf
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
