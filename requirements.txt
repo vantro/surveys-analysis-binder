@@ -6,3 +6,4 @@ pygal
 voila
 reportlab
 svglib
+jupyterlab-myst

@@ -1,0 +1,13 @@
+name: analyse-survey-moodle
+channels:
+- conda-forge
+dependencies:
+- numpy>=1.14.5
+- pandas
+- matplotlib
+- openpyxl
+- pygal
+- voila
+- reportlab
+- svglib
+- jupyterlab-myst
